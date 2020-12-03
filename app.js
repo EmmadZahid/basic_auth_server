@@ -4,23 +4,34 @@ const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
 
 const app = express()
-const usersRouter = require('./routes/users')
+const authRouter = require('./routes/auth')
 
 //Middlewares
 app.use(morgan('dev'))
 app.use(bodyParser.json())
 
-//Routes
-app.use('/user', usersRouter)
+app.use(function (req, res, next) {
 
-//Erro handling
+    // Website you wish to allow to connect
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    // Request methods you wish to allow
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+    // Pass to next layer of middleware
+    next();
+});
+//Routes
+app.use('/auth', authRouter)
+
+//Error handling
 app.use((err, req, res, next)=>{
-    const statusCode = error.statusCode || 500
+    const statusCode = err.statusCode || 500
     
     res.status(statusCode).json({
-        message: error.message,
-        data: error.data
-    })
+        message: err.message,
+        data: err.data
+    }).send()
 })
 
 
