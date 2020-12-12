@@ -10,17 +10,18 @@ const authRouter = require('./routes/auth')
 app.use(morgan('dev'))
 app.use(bodyParser.json())
 
-app.use(function (req, res, next) {
+// app.use(function (req, res, next) {
 
-    // Website you wish to allow to connect
-    res.setHeader('Access-Control-Allow-Origin', '*');
+//     // Website you wish to allow to connect
+//     res.setHeader('Access-Control-Allow-Origin', '*');
 
-    // Request methods you wish to allow
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+//     // Request methods you wish to allow
+//     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
 
-    // Pass to next layer of middleware
-    next();
-});
+//     // Pass to next layer of middleware
+//     next();
+// });
+
 //Routes
 app.use('/auth', authRouter)
 
