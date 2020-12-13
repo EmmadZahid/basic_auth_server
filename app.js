@@ -7,7 +7,9 @@ const dbconfig = require('./config/db.config')
 const db = require('./models')
 
 const app = express()
+const bcrypt = require('bcryptjs')
 const authRouter = require('./routes/auth')
+const authConfig = require('./config/auth.config')
 
 var corsOptions = {
     origin: "http://localhost:3001"
@@ -52,11 +54,11 @@ app.use((err, req, res, next) => {
 const port = process.env.PORT || 3001;
 
 mongoose.connect(`mongodb://${dbconfig.HOST}:${dbconfig.PORT}/${dbconfig.DB}`).then(() => {
-    initializeDbState().then(()=>{
+    initializeDbState().then(() => {
         app.listen(port, () => {
             console.log(`Server started at ${port}`)
         })
-    }, err =>{
+    }, err => {
         console.log(err)
     })
 }).catch(() => {
@@ -64,19 +66,28 @@ mongoose.connect(`mongodb://${dbconfig.HOST}:${dbconfig.PORT}/${dbconfig.DB}`).t
 })
 
 
-initializeDbState = async () =>{
+initializeDbState = async () => {
     let Role = db.role
+    let User = db.user
 
     const count = await Role.estimatedDocumentCount()
-    if(count == 0){
-        new Role({
-            name: "user"
-        }).save()
-        new Role({
-            name: "admin"
-        }).save()
-        new Role({
-            name: "moderator"
-        }).save()
+    if (count == 0) {
+
+        let roleIds = await Role.insertMany([
+            { name: "user" },
+            { name: "moderator" },
+            { name: "admin" },
+        ])
+    }
+
+    let adminUser = await User.findOne({ email: db.adminUser.email })
+    if (!adminUser) {
+        const hashedPassword = await bcrypt.hash(db.adminUser.password, 12)
+
+        let adminRole = await Role.findOne({name: 'admin'})
+        db.adminUser.set('password',hashedPassword)
+        db.adminUser.set('roles',[adminRole._id])
+
+        await db.adminUser.save()
     }
 }
