@@ -7,7 +7,7 @@ const Role = db.role
 
 verifyToken = async (req, res, next) =>{
     try {
-        let token = req.headers['Authorization']
+        let token = req.headers['authorization']
         if(!token){
             let error = new Error('No token provided!')
             error.statusCode = 403
@@ -24,43 +24,52 @@ verifyToken = async (req, res, next) =>{
 
 
 isAdmin = async(req, res, next)=>{
-    let user = await User.find({_id: req.userId})
-    let roles = await Role.find({
-        _id: {$in: user.roles}
-    })
-
-    let hasAdminRole = roles.find(role => {
-        return role.name == 'admin'
-    })
-
-    if(hasAdminRole){
-        next()
-        return
+    try {
+        let user = await User.findOne({_id: req.userId})
+        let roles = await Role.find({
+            _id: {$in: user.roles}
+        })
+    
+        let hasAdminRole = roles.find(role => {
+            return role.name == 'admin'
+        })
+    
+        if(hasAdminRole){
+            next()
+            return
+        }
+    
+        let error = new Error('Require Admin Role!')
+        error.statusCode = 403
+        throw error   
+    } catch (error) {
+        next(error)
     }
-
-    let error = new Error('Require Admin Role!')
-    error.statusCode = 403
-    throw error
 }
 
 isModerator = async(req, res, next)=>{
-    let user = await User.find({_id: req.userId})
-    let roles = await Role.find({
-        _id: {$in: user.roles}
-    })
-
-    let hasModeratorRole = roles.find(role => {
-        return role.name == 'moderator'
-    })
-
-    if(hasModeratorRole){
-        next()
-        return
+    try {
+        let user = await User.findOne({_id: req.userId})
+        console.log('Roles:' , user.roles)
+        let roles = await Role.find({
+            _id: {$in: user.roles}
+        })
+    
+        let hasModeratorRole = roles.find(role => {
+            return role.name == 'moderator'
+        })
+    
+        if(hasModeratorRole){
+            next()
+            return
+        }
+    
+        let error = new Error('Require Moderator Role!')
+        error.statusCode = 403
+        throw error        
+    } catch (error) {
+        next(error)
     }
-
-    let error = new Error('Require Admin Role!')
-    error.statusCode = 403
-    throw error
 }
 
 module.exports = {

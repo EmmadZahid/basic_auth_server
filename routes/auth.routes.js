@@ -4,7 +4,7 @@ const {body} = require('express-validator')
 const HandleValidation = require('../middlewares/handleValidation')
 const VerifySignup = require('../middlewares/verifySignup')
 
-const AuthController = require('../controllers/auth')
+const AuthController = require('../controllers/auth.controller')
 
 router.post('/register',[
     body('email').trim().not().isEmpty().withMessage('Email required!').isEmail().withMessage('Please enter valid email'),
@@ -20,6 +20,7 @@ router.post('/register',[
 ], 
 HandleValidation.handleValidationErrors,
 VerifySignup.checkIfEmailAlreadyExists,
+VerifySignup.checkRolesExisted,
 AuthController.register)
 
 router.post('/login',[

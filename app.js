@@ -8,8 +8,8 @@ const db = require('./models')
 
 const app = express()
 const bcrypt = require('bcryptjs')
-const authRouter = require('./routes/auth')
-const authConfig = require('./config/auth.config')
+const authRouter = require('./routes/auth.routes')
+const userRouter = require('./routes/user.routes')
 
 var corsOptions = {
     origin: "http://localhost:3001"
@@ -18,8 +18,8 @@ var corsOptions = {
 app.use(cors(corsOptions));
 //Middlewares
 app.use(morgan('dev'))
-app.use(bodyParser.json())
-
+app.use(bodyParser.json())  // parse requests of content-type - application/json
+app.use(bodyParser.urlencoded({ extended: true })); // parse requests of content-type - application/x-www-form-urlencoded
 // app.use(function (req, res, next) {
 
 //     // Website you wish to allow to connect
@@ -38,6 +38,7 @@ app.get("/", (req, res) => {
 });
 
 app.use('/auth', authRouter)
+app.use('/user', userRouter)
 
 //Error handling
 app.use((err, req, res, next) => {

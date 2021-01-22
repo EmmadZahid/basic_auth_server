@@ -20,7 +20,7 @@ exports.register = async (req, res, next) => {
             email: email,
             password: hashedPassword,
             username: username,
-            roles: [userRole._id,userRole._id]
+            roles: [userRole._id]
         })
 
         await user.save()
