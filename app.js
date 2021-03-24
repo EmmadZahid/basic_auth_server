@@ -3,7 +3,7 @@ const morgan = require('morgan')
 const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
 const cors = require('cors')
-const dbconfig = require('./config/db.config')
+const {dbConfig} = require('./config')
 const db = require('./models')
 
 const app = express()
@@ -54,7 +54,7 @@ app.use((err, req, res, next) => {
 //Server
 const port = process.env.PORT || 3001;
 
-mongoose.connect(`mongodb://${dbconfig.HOST}:${dbconfig.PORT}/${dbconfig.DB}`).then(() => {
+mongoose.connect(`mongodb://${dbConfig.HOST}:${dbConfig.PORT}/${dbConfig.DB}`).then(() => {
     initializeDbState().then(() => {
         app.listen(port, () => {
             console.log(`Server started at ${port}`)

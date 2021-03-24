@@ -14,8 +14,18 @@ const userSchema = new Schema({
         unique: true
     },
     password:{
-        type: String,
+        type: String
+    },
+    registrationKey:{
+        type: String
+    },
+    isRegistered:{
+        type: Boolean,
+        default: false,
         required: true
+    },
+    registrationDate:{
+        type: Date
     },
     roles:[{
         type: mongoose.Schema.Types.ObjectId,
