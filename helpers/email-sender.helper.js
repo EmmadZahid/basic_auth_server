@@ -5,14 +5,14 @@ const emailConfig = require('../config/email.config')
 
 const transporter = nodemailer.createTransport(sendgridTransporter({
     auth: {
-        api_key: emailConfig.sendgridApiKey
+        api_key: emailConfig.getSendgridApiKey()
     }
 }))
 
 sendEmail = (to, subject, htmlBody) => {
     return transporter.sendMail({
         to: to,
-        from: emailConfig.fromEmail,
+        from: emailConfig.getFromEmail(),
         subject: subject,
         html: htmlBody
     })

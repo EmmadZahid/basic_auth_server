@@ -5,7 +5,7 @@ const db = require('../models')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const {authConfig, frontEndHost} = require('../config')
-const {emailSender} = require('../helpers')
+const {emailSenderHelper} = require('../helpers')
 
 const User = db.user
 const Role = db.role
@@ -57,7 +57,7 @@ exports.registerViaEmail = async (req, res, next) => {
         await user.save()
         res.status(200).send(regKey)
         let emailHtml = `Dear ${username},<br>Please click on the below link to complete your registration. <br><a href=${frontEndHost}/registerLink/${regKey}>Link</a>`
-        await emailSender.sendEmail(email, 'Registration Link', emailHtml)
+        await emailSenderHelper.sendEmail(email, 'Registration Link', emailHtml)
     } catch (err) {
         console.log(err)
         next(err)
