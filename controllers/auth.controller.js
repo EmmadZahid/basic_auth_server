@@ -110,6 +110,29 @@ exports.confirmRegistration = async (req, res, next) => {
     }
 }
 
+exports.resetPassword = async (req, res, next) => {
+    try {
+        const { email, oldPassword, newPassword } = req.body
+
+        const user = await User.findOne({ email: email })
+        if (user) {
+            let isSamePassword = await bcrypt.compare(oldPassword, user.password)
+            if (!isSamePassword) {
+                return res.status(400).send('Wrong email or password')
+            }
+            const hashedPassword = await bcrypt.hash(newPassword, 12)
+            user.password = hashedPassword
+            await user.save()
+
+            return res.status(200).send("Password changed successfully!");
+        } else {
+            return res.status(400).send('Wrong email or password!')
+        }
+    } catch (error) {
+        next(error)
+    }
+}
+
 exports.login = async (req, res, next) => {
     try {
         const { email, password } = req.body
@@ -143,7 +166,6 @@ exports.login = async (req, res, next) => {
     } catch (error) {
         next(error)
     }
-
 }
 
 exports.secret = () => {

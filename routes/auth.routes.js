@@ -45,6 +45,12 @@ router.post('/confirmRegistration',[
 HandleValidation.handleValidationErrors,
 AuthController.confirmRegistration)
 
+router.post('/resetPassword',[
+    body('email').trim().not().isEmpty().withMessage('Email required!').isEmail().withMessage('Please enter valid email'),
+    body('oldPassword').trim().not().isEmpty().withMessage('Old password required!'),
+    body('newPassword').trim().not().isEmpty().withMessage('New password required!')
+], HandleValidation.handleValidationErrors, AuthController.resetPassword)
+
 router.post('/login',[
     body('email').trim().not().isEmpty().withMessage('Email required!').isEmail().withMessage('Please enter valid email'),
     body('password').trim().not().isEmpty().withMessage('Password required!')
