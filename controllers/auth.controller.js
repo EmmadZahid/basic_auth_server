@@ -4,11 +4,13 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('../models')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const {authConfig, frontEndHost} = require('../config')
-const {emailSenderHelper} = require('../helpers')
+const { authConfig, frontEndHost } = require('../config')
+const { emailSenderHelper } = require('../helpers');
+const { user } = require('../models');
 
 const User = db.user
 const Role = db.role
+const Token = db.token
 
 exports.register = async (req, res, next) => {
     try {
@@ -39,24 +41,29 @@ exports.register = async (req, res, next) => {
 exports.registerViaEmail = async (req, res, next) => {
     try {
         const { email, username } = req.body
-        
+
         let userRole = await Role.findOne({
             name: 'user'
         })
 
-        let regKey = uuidv4()
+        let code = uuidv4()
         const user = new User({
             email: email,
             username: username,
             isRegistered: false,
-            registrationKey: regKey,
             registrationDate: new Date(),
             roles: [userRole._id]
         })
 
-        await user.save()
-        res.status(200).send(regKey)
-        let emailHtml = `Dear ${username},<br>Please click on the below link to complete your registration. <br><a href=${frontEndHost}/registerLink/${regKey}>Link</a>`
+        let savedUser = await user.save()
+        let token = new Token({
+            userId: savedUser._id,
+            token: code,
+            type: 'registration'
+        })
+        await token.save()
+        res.status(200).send(code)
+        let emailHtml = `Dear ${username},<br>Please click on the below link to complete your registration. <br><a href=${frontEndHost}/registerLink/${code}>Link</a>`
         await emailSenderHelper.sendEmail(email, 'Registration Link', emailHtml)
     } catch (err) {
         console.log(err)
@@ -66,27 +73,36 @@ exports.registerViaEmail = async (req, res, next) => {
 
 exports.confirmRegistration = async (req, res, next) => {
     try {
-        const { registrationKey, password } = req.body
-        
-        let user = await User.findOne({
-            registrationKey: registrationKey
+        const { registrationKey, password, username } = req.body
+
+        let token = await Token.findOne({
+            token: registrationKey
         })
 
-        if(!user){
+        if (!token) {
             return res.status(400).send("Invalid registration key!")
-        } else if(!user.registrationDate || moment(new Date()).diff(moment(user.registrationDate), 'minutes') > (24 * 60)){   //key is valid for 24 hours only
+        } else if (!token.createdDate || moment(new Date()).diff(moment(token.createdDate), 'minutes') > (24 * 60)) {   //key is valid for 24 hours only
+            await Token.deleteOne({
+                token: registrationKey
+            })
             await User.deleteOne({
-                registrationKey: registrationKey
+                _id: token.userId
             })
             return res.status(400).send("Registration key has expired!")
         }
+        
+        let user = await User.findOne({_id: token.userId})
 
+        user.username = username
         user.isRegistered = true
         user.password = await bcrypt.hash(password, 12)
-        user.registrationDate = new Date()
-        user.registrationKey = null
 
         await user.save()
+
+        await Token.deleteOne({
+            token: registrationKey
+        })
+
         return res.status(200).send("Registration successfull!")
     } catch (err) {
         console.log(err)

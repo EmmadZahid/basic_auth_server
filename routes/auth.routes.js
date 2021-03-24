@@ -24,8 +24,7 @@ VerifySignup.checkRolesExisted,
 AuthController.register)
 
 router.post('/registerViaEmail',[
-    body('email').trim().not().isEmpty().withMessage('Email required!').isEmail().withMessage('Please enter valid email'),
-    body('username').trim().not().isEmpty().withMessage('Username required!')
+    body('email').trim().not().isEmpty().withMessage('Email required!').isEmail().withMessage('Please enter valid email')
 ], 
 HandleValidation.handleValidationErrors,
 VerifySignup.checkIfEmailAlreadyExists,
