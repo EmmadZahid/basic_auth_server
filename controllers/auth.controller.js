@@ -1,4 +1,3 @@
-const { validationResult } = require('express-validator')
 const moment = require('moment')
 const { v4: uuidv4 } = require('uuid');
 const db = require('../models')
@@ -6,7 +5,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { authConfig, frontEndHost } = require('../config')
 const { emailSenderHelper } = require('../helpers');
-const { user } = require('../models');
+const mongoose = require('mongoose')
 
 const User = db.user
 const Role = db.role
@@ -39,6 +38,7 @@ exports.register = async (req, res, next) => {
 }
 
 exports.registerViaEmail = async (req, res, next) => {
+    const session = await mongoose.startSession()
     try {
         const { email, username } = req.body
 
@@ -55,23 +55,31 @@ exports.registerViaEmail = async (req, res, next) => {
             roles: [userRole._id]
         })
 
-        let savedUser = await user.save()
-        let token = new Token({
-            userId: savedUser._id,
-            token: code,
-            type: 'registration'
+        //Using transaction way #1
+        await session.withTransaction(async()=>{
+            let savedUser = await user.save({session: session})
+            
+            let token = new Token({
+                userId: savedUser._id,
+                token: code,
+                type: 'registration'
+            })
+            await token.save({session: session})
         })
-        await token.save()
+    
+        session.endSession()
         res.status(200).send(code)
         let emailHtml = `Dear ${username},<br>Please click on the below link to complete your registration. <br><a href=${frontEndHost}/registerLink/${code}>Link</a>`
         await emailSenderHelper.sendEmail(email, 'Registration Link', emailHtml)
     } catch (err) {
+        session.endSession()
         console.log(err)
         next(err)
     }
 }
 
 exports.confirmRegistration = async (req, res, next) => {
+    const session = await mongoose.startSession()
     try {
         const { registrationKey, password, username } = req.body
 
@@ -82,12 +90,16 @@ exports.confirmRegistration = async (req, res, next) => {
         if (!token) {
             return res.status(400).send("Invalid registration key!")
         } else if (!token.createdDate || moment(new Date()).diff(moment(token.createdDate), 'minutes') > (24 * 60)) {   //key is valid for 24 hours only
+            session.startTransaction()
             await Token.deleteOne({
                 token: registrationKey
-            })
+            }).session(session)
             await User.deleteOne({
                 _id: token.userId
-            })
+            }).session(session)
+
+            session.commitTransaction()
+            session.endSession()
             return res.status(400).send("Registration key has expired!")
         }
         
@@ -97,14 +109,21 @@ exports.confirmRegistration = async (req, res, next) => {
         user.isRegistered = true
         user.password = await bcrypt.hash(password, 12)
 
-        await user.save()
+        //Using transaction way #2
+        session.startTransaction()
+        await user.save({session: session})
 
         await Token.deleteOne({
             token: registrationKey
-        })
+        }).session(session)
+
+        session.commitTransaction()
+        session.endSession()
 
         return res.status(200).send("Registration successfull!")
     } catch (err) {
+        await session.abortTransaction()
+        session.endSession()
         console.log(err)
         next(err)
     }
