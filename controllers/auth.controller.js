@@ -3,7 +3,6 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('../models')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const { authConfig, frontEndHost } = require('../config')
 const { emailSenderHelper } = require('../helpers');
 const mongoose = require('mongoose')
 
@@ -69,7 +68,7 @@ exports.registerViaEmail = async (req, res, next) => {
     
         session.endSession()
         res.status(200).send(code)
-        let emailHtml = `Dear ${username},<br>Please click on the below link to complete your registration. <br><a href=${frontEndHost}/registerLink/${code}>Link</a>`
+        let emailHtml = `Dear ${username},<br>Please click on the below link to complete your registration. <br><a href=${process.env.FRONT_END_HOST}/registerLink/${code}>Link</a>`
         await emailSenderHelper.sendEmail(email, 'Registration Link', emailHtml)
     } catch (err) {
         session.endSession()
@@ -163,7 +162,7 @@ exports.login = async (req, res, next) => {
             if (!isSamePassword) {
                 return res.status(400).send('Wrong email or password')
             }
-            let token = jwt.sign({ id: user._id }, authConfig.secret, {
+            let token = jwt.sign({ id: user._id }, process.env.SECRET, {
                 expiresIn: 86400 //24 hours
             })
 
