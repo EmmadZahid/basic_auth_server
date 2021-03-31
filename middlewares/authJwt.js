@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken')
 const db = require('../models')
-const authConfig = require('../config/auth.config')
 
 const User = db.user
 const Role = db.role
@@ -14,7 +13,7 @@ verifyToken = async (req, res, next) =>{
             throw error
         }
 
-        let decodedToken = await jwt.verify(token, authConfig.secret)
+        let decodedToken = await jwt.verify(token, process.env.SECRET)
         req.userId = decodedToken.id
         next()
     } catch (error) {
