@@ -24,6 +24,7 @@
     "morgan": "^1.10.0",
     "nodemailer": "^6.5.0",
     "nodemailer-sendgrid-transport": "^0.2.0",
+    "pubsub-js": "^1.9.3",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

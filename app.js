@@ -1,3 +1,5 @@
+const path = require('path')
+require('dotenv').config({path: path.join(__dirname, `.env.${process.env.NODE_ENV.trim()}`)})
 const express = require('express')
 const morgan = require('morgan')
 const bodyParser = require('body-parser')
@@ -5,14 +7,15 @@ const mongoose = require('mongoose')
 const cors = require('cors')
 // const {dbConfig} = require('./config')
 const db = require('./models')
-const path = require('path')
+
+const subscribers = require('./subscribers')    //just loading for initizalization
 
 const app = express()
 const bcrypt = require('bcryptjs')
 const authRouter = require('./routes/auth.routes')
 const userRouter = require('./routes/user.routes')
 
-require('dotenv').config({path: path.join(__dirname, `.env.${process.env.NODE_ENV.trim()}`)})
+
 
 var corsOptions = {
     origin: "http://localhost:3001"
